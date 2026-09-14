@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Live Calendar</title>
+
+<style>
+
+/* =========================
+   MAIN CALENDAR
+========================= */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-family: "Bodoni 72", "Bodoni MT", Didot, "Times New Roman", serif;
+}
+
+.calendar {
+    width: 100%;
+    max-width: 500px;
+    aspect-ratio: 1 / 1;
+    margin: auto;
+
+    background: #F9F5F0;
+
+    border-radius: 24px;
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+}
+
+/* =========================
+   TOP DATE BAR
+========================= */
+
+.header {
+    background: #F5C0B9;
+    color: #F9DDD6;
+
+    height: 25%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    padding: 15px;
+}
+
+.today {
+    font-size: clamp(20px, 5vw, 32px);
+    letter-spacing: 1px;
+    line-height: 1.1;
+}
+
+.today .month {
+    display: block;
+}
+
+.today .date {
+    display: block;
+    font-size: 1.25em;
+}
+
+/* =========================
+   CALENDAR BODY
+========================= */
+
+.calendar-body {
+    flex: 1;
+
+    background: #F9F5F0;
+
+    padding: 18px;
+
+    display: flex;
+    flex-direction: column;
+}
+
+/* =========================
+   WEEKDAY NAMES
+========================= */
+
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+
+    text-align: center;
+
+    margin-bottom: 8px;
+}
+
+.weekday {
+    font-family: Arial, sans-serif;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    color: #555;
+
+    text-transform: uppercase;
+}
+
+/* =========================
+   DAYS GRID
+========================= */
+
+.days {
+    flex: 1;
+
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+
+    gap: 5px;
+}
+
+/* Individual day */
+
+.day {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-family: "Bodoni 72", "Bodoni MT", Didot, "Times New Roman", serif;
+
+    font-size: clamp(14px, 3vw, 21px);
+
+    color: #171717;
+
+    border-radius: 50%;
+
+    position: relative;
+}
+
+/* Empty days */
+
+.empty {
+    color: transparent;
+}
+
+/* =========================
+   TODAY
+========================= */
+
+.day.today-number {
+    background: #F5C0B9;
+
+    color: #F9DDD6;
+
+    font-weight: bold;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 350px) {
+
+    .calendar-body {
+        padding: 12px;
+    }
+
+    .days {
+        gap: 2px;
+    }
+
+    .weekday {
+        font-size: 9px;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="calendar">
+
+    <!-- TOP DATE BAR -->
+
+    <div class="header">
+
+        <div class="today">
+
+            <span class="month" id="currentMonth"></span>
+
+            <span class="date" id="currentDate"></span>
+
+        </div>
+
+    </div>
+
+
+    <!-- CALENDAR -->
+
+    <div class="calendar-body">
+
+        <!-- WEEKDAYS -->
+
+        <div class="weekdays">
+
+            <div class="weekday">Mon</div>
+            <div class="weekday">Tue</div>
+            <div class="weekday">Wed</div>
+            <div class="weekday">Thu</div>
+            <div class="weekday">Fri</div>
+            <div class="weekday">Sat</div>
+            <div class="weekday">Sun</div>
+
+        </div>
+
+
+        <!-- DAYS -->
+
+        <div class="days" id="calendarDays"></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================
+   LIVE CALENDAR
+========================= */
+
+function createCalendar() {
+
+    const today = new Date();
+
+    const year = today.getFullYear();
+
+    const month = today.getMonth();
+
+    const date = today.getDate();
+
+
+    /* Month names */
+
+    const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+    ];
+
+
+    /* =========================
+       TOP DATE
+    ========================= */
+
+    document.getElementById("currentMonth").textContent =
+        monthNames[month];
+
+    document.getElementById("currentDate").textContent =
+        date;
+
+
+    /* =========================
+       FIND FIRST DAY
+    ========================= */
+
+    const firstDay = new Date(year, month, 1);
+
+    /*
+       JavaScript:
+       Sunday = 0
+       Monday = 1
+       etc.
+
+       We convert it so Monday = 0
+    */
+
+    let startingDay = firstDay.getDay();
+
+    startingDay = startingDay === 0 ? 6 : startingDay - 1;
+
+
+    /* =========================
+       NUMBER OF DAYS
+    ========================= */
+
+    const daysInMonth =
+        new Date(year, month + 1, 0).getDate();
+
+
+    /* =========================
+       CREATE GRID
+    ========================= */
+
+    const calendarDays =
+        document.getElementById("calendarDays");
+
+    calendarDays.innerHTML = "";
+
+
+    /* Empty spaces before day 1 */
+
+    for (let i = 0; i < startingDay; i++) {
+
+        const emptyDay = document.createElement("div");
+
+        emptyDay.classList.add("day", "empty");
+
+        calendarDays.appendChild(emptyDay);
+
+    }
+
+
+    /* =========================
+       CREATE DAYS
+    ========================= */
+
+    for (let day = 1; day <= daysInMonth; day++) {
+
+        const dayElement =
+            document.createElement("div");
+
+        dayElement.classList.add("day");
+
+        dayElement.textContent = day;
+
+
+        /* Highlight today's date */
+
+        if (day === date) {
+
+            dayElement.classList.add("today-number");
+
+        }
+
+
+        calendarDays.appendChild(dayElement);
+
+    }
+
+}
+
+
+/* Create calendar when page loads */
+
+createCalendar();
+
+
+/* =========================
+   AUTOMATICALLY UPDATE
+   AFTER MIDNIGHT
+========================= */
+
+setInterval(() => {
+
+    createCalendar();
+
+}, 60000);
+
+</script>
+
+</body>
+</html>
